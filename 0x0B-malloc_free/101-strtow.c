@@ -1,84 +1,43 @@
 #include <stdlib.h>
+#include "main.h"
 
 /**
- * strtow - char
- * @str: pointer to string params
- * Return: char
- */
+* **strtow - function that splits a string into words.
+* @str : pointer
+* Return: Char
+*/
 
 char **strtow(char *str)
 {
-	int i = 0, j = 0, k = 0;
-	int len = 0, count = 0;
-	char **f, *col;
+	char **d;
+	int i;
+	int j = 0;
+	int con = 0;
 
-	if (!str || !*str)
-	{
+	if (str == NULL)
 		return (NULL);
+
+	for (i = 0 ; str[i] != '\0' ; i++)
+	{
+		if (str[i] != 32)
+			con++;
 	}
 
-	while (*(str + i))
-	{
-		if (*(str + i) != ' ')
-		{
-			if (*(str + i + 1) == ' ' || *(str + i + 1) == 0)
-			{
-				count += 1;
-			}
-		}
-		i++;
-	}
+	d = malloc(sizeof(char) * con);
 
-	if (count == 0)
-	{
+	if (d == NULL)
 		return (NULL);
-	}
-	count += 1;
-	f = malloc(sizeof(char *) * count);
 
-	if (!f)
+	for (i = 0 ; str[i] != '\0' ; i++)
 	{
-		return (NULL);
-	}
-	i = 0;
-
-	while (*str)
-	{
-		while (*str == ' ' && *str)
+		if (str[i] != 32)
 		{
-			str++;
-		}
-		len = 0;
-
-		while (*(str + len) != ' ' && *(str + len))
-		{
-			len += 1;
-		}
-		len += 1;
-		col = malloc(sizeof(char) * len);
-
-		if (!col)
-		{
-			for (k = j - 1; k >= 0; k--)
-			{
-				free(f[k]);
-			}
-			free(f);
-			return (NULL);
-		}
-
-		for (k = 0; k < (len - 1);  k++)
-		{
-			*(col + k) = *(str++);
-		}
-		*(col + k) = '\0';
-		*(f + j) = col;
-
-		if (j < (count - 1))
-		{
+			*d[j] = str[i];
 			j++;
 		}
+		else
+		{
+		}
 	}
-	*(f + j) = NULL;
-	return (f);
-} /*yes*/
+	return (d);
+}
