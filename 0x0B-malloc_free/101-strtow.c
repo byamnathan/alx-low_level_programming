@@ -3,40 +3,105 @@
 #include <stdio.h>
 
 /**
- * wordcounter - a function that counts words and the letters
- * @str: a pointer point to string been counted
- * @pos: position of the word to count characters from
- * @firstchar: position of the first letter of the word
+ * truncate_extra_spaces - a function that deletes extra spaces
+ * @str: a pointer point to string
+ * @str1: a pointer point to new string after truncation of extra spaces
  *
- * Return: wordcount if pos == 0,
- * length of word if pos > 0,
- * position of word if pos > 0 && firstchar > 0
+ * Return: return pointer to string, NULL if fail
  */
 
-int wordcounter(char *str, int pos, char firstchar)
+char *truncate_extra_spaces(char *str1, char *str)
 {
-	int i, wordcount, charcount, flag;
+	int i, j;
 
-	str[0] != ' ' ? (wordcount = 1) : (wordcount = 0);
-	for (i = 0, flag = 0; str[i]; i++)
+	for (i = 0, j = 0; str[i] != '\0'; i++)
 	{
-		if (str[i] == ' ' && str[i + 1] != ' ' && str[i + 1] != '\0' && flag == 0)
+		if (str[i] != ' ' && j == 0)
 		{
-			wordcount++;
-			flag = 1;
-		}
-		if (pos > 0 && pos == wordcount)
-		{
-			if (pos > 0 && pos == wordcount && firstchar > 0)
-				return (i);
-			for (charcount = 0; str[i + charcount + 1] != ' '; charcount++)
-				;
-			return (charcount);
+			str1[j] = str[i];
+			j++;
+			continue;
 		}
 		if (str[i] == ' ')
-			flag = 0;
+			continue;
+		else if (str[i] != ' ' && str[i - 1] == ' ')
+		{
+			str1[j] = ' ';
+			str1[++j] = str[i];
+			j++;
+		}
+		else
+		{
+			str1[j] = str[i];
+			j++;
+		}
 	}
-	return (wordcount);
+	if (j == 0)
+		return (NULL);
+	str1[j] = '\0';
+	return (str1);
+}
+
+/**
+ * mem_alloc - splits string into words and allocate the memory for it
+ * @str1: a pointer point to string
+ *
+ * Return: return pointer of the two dimemsion of arrays, NULL if fail
+ */
+
+char **mem_alloc(char *str1)
+{
+	int i, j, n, words, ch_c, w_c;
+	char **p;
+
+	for (i = 0, words = 1; str1[i] != '\0'; i++)
+	{
+		if (str1[i] == ' ')
+			++words;
+	}
+	p = malloc((words + 1) * sizeof(void *));
+	if (p == NULL)
+		return (NULL);
+	i = ch_c = 0;
+	for (w_c = 0; w_c < words; w_c++)
+	{
+		while (str1[i] != '\0')
+		{
+			if (str1[i] == ' ')
+			{
+				ch_c = i - ch_c;
+				p[w_c] = malloc(ch_c + 1);
+				if (p[w_c] == NULL)
+				{
+					for (j = 0; j <= w_c; j++)
+						free(p[j]);
+					return (NULL);
+				}
+				ch_c = i;
+				i++;
+				break;
+			}
+			i++;
+		}
+		p[w_c] = malloc(i - ch_c);
+	}
+	p[words] = NULL;
+	for (i = 0, words = 1; str1[i] != '\0'; i++)
+	{
+		if (str1[i] == ' ')
+			++words;
+	}
+	j = 0;
+	for (i = 0; i < words && str1[j] != '\0'; i++)
+	{
+		for (n = 0; str1[j] != '\0' && str1[j] != ' '; n++, j++)
+		{
+			p[i][n] = str1[j];
+		}
+		j++;
+		p[i][n] = '\0';
+	}
+	return (p);
 }
 
 /**
@@ -48,43 +113,48 @@ int wordcounter(char *str, int pos, char firstchar)
 
 char **strtow(char *str)
 {
-	int wc, wordlen, getfirstchar, len, i, j;
-	char **p;
+	int len;
+	char **ptr;
+	char *str1;
 
-	for (len = 0; str[len]; len++)
-		;
-	if (str == NULL)
+	/** get the length of the original string **/
+	if (str == NULL || *str == '\0')
 		return (NULL);
-	wc = wordcounter(str, 0, 0);
-	if (len == 0 || wc == 0)
+	len = string_len(str);
+
+	/** delete the extra spaces and make a new string **/
+	str1 = (char *)malloc(len + 1);
+	if (str1 == NULL)
 		return (NULL);
-	p = malloc((wc + 1) * sizeof(void *));
-	if (p == NULL)
-		return (NULL);
-	for (i = 0, wordlen = 0; i < wc; i++)
+	str1 = truncate_extra_spaces(str1, str);
+	if (str1 == NULL)
 	{
-		/* Allocate memory for nested elements */
-		wordlen = wordcounter(str, i + 1, 0);
-		if (i == 0 && str[i] != ' ')
-			wordlen++;
-		p[i] = malloc(wordlen * sizeof(char) + 1);
-		if (p[i] == NULL)
-		{
-			for ( ; i >= 0; --i)
-				free(p[i]);
-			free(p);
-			return (NULL);
-		}
-		/* initialize each element of the nested array with the word*/
-		getfirstchar = wordcounter(str, i + 1, 1);
-		if (str[0] != ' ' && i > 0)
-			getfirstchar++;
-		else if (str[0] == ' ')
-			getfirstchar++;
-		for (j = 0; j < wordlen; j++)
-			p[i][j] = str[getfirstchar + j];
-		p[i][j] = '\0';
+		free (str1);
+		return (NULL);
 	}
-	p[i] = NULL;
-	return (p);
+
+	/** splits a string into words and allocate memories for them **/
+	ptr = mem_alloc(str1);
+	if (ptr == NULL)
+		return (NULL);
+	free (str1);
+	return (ptr);
+}
+
+/**
+ * string_len - a function counts the string length
+ * @str: a pointer point to string
+ *
+ * Return: return the length of the string. or 0 on fail
+ */
+
+int string_len(char *str)
+{
+	int i, len;
+
+	if (!*str)
+		return (0);
+	for (i = 0, len = 0; str[i] != '\0'; i++, len++)
+		;
+	return (len);
 }
