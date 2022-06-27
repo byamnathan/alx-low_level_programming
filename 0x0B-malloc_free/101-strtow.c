@@ -1,82 +1,90 @@
 #include "main.h"
-
+#include <stdlib.h>
 #include <stdio.h>
 
-#include <stdlib.h>
-
 /**
- * number - function to calculate number of words
- * @str: string being passed to check for words
+ * wordcounter - a function that counts words and the letters
+ * @str: a pointer point to string been counted
+ * @pos: position of the word to count characters from
+ * @firstchar: position of the first letter of the word
  *
- * Return: number of words
+ * Return: wordcount if pos == 0,
+ * length of word if pos > 0,
+ * position of word if pos > 0 && firstchar > 0
  */
-int number(char * str) {
-  int a, num = 0;
 
-  for (a = 0; str[a] != '\0'; a++) {
-    if ( * str == ' ')
-      str++;
-    else {
-      for (; str[a] != ' ' && str[a] != '\0'; a++)
-        str++;
-      num++;
-    }
-  }
-  return (num);
+int wordcounter(char *str, int pos, char firstchar)
+{
+	int i, wordcount, charcount, flag;
+
+	str[0] != ' ' ? (wordcount = 1) : (wordcount = 0);
+	for (i = 0, flag = 0; str[i]; i++)
+	{
+		if (str[i] == ' ' && str[i + 1] != ' ' && str[i + 1] != '\0' && flag == 0)
+		{
+			wordcount++;
+			flag = 1;
+		}
+		if (pos > 0 && pos == wordcount)
+		{
+			if (pos > 0 && pos == wordcount && firstchar > 0)
+				return (i);
+			for (charcount = 0; str[i + charcount + 1] != ' '; charcount++)
+				;
+			return (charcount);
+		}
+		if (str[i] == ' ')
+			flag = 0;
+	}
+	return (wordcount);
 }
-/**
- * free_everything - frees the memory
- * @string: pointer values being passed for freeing
- * @i: counter
- */
-void free_everything(char ** string, int i) {
-  for (; i > 0;)
-    free(string[--i]);
-  free(string);
-}
 
 /**
- * strtow - function that splits string into words
- * @str: string being passed
- * Return: null if string is empty or null or function fails
+ * strtow - a function that splits a string into words
+ * @str: pointer point to string
+ *
+ * Return: double pointer to words, return NULL if fail
  */
-char ** strtow(char * str) {
-  int total_words = 0, b = 0, c = 0, length = 0;
-  char ** words, * found_word;
 
-  if (str == 0 || * str == 0)
-    return (NULL);
-  total_words = number(str);
-  if (total_words == 0)
-    return (NULL);
-  words = malloc((total_words + 1) * sizeof(char * ));
-  if (words == 0)
-    return (NULL);
-  for (;* str != '\0' && b < total_words;) {
-    if ( * str == ' ')
-      str++;
-    else {
-      found_word = str;
-      for (;* str != ' ' && * str != '\0';) {
-        length++;
-        str++;
-      }
-      words[b] = malloc((length + 1) * sizeof(char));
-      if (words[b] == 0) {
-        free_everything(words, b);
-        return (NULL);
-      }
-      while ( * found_word != ' ' && * found_word != '\0') {
-        words[b][c] = * found_word;
-        found_word++;
-        c++;
-      }
-      words[b][c] = '\0';
-      b++;
-      c = 0;
-      length = 0;
-      str++;
-    }
-  }
-  return (words);
+char **strtow(char *str)
+{
+	int wc, wordlen, getfirstchar, len, i, j;
+	char **p;
+
+	for (len = 0; str[len]; len++)
+		;
+	if (str == NULL)
+		return (NULL);
+	wc = wordcounter(str, 0, 0);
+	if (len == 0 || wc == 0)
+		return (NULL);
+	p = malloc((wc + 1) * sizeof(void *));
+	if (p == NULL)
+		return (NULL);
+	for (i = 0, wordlen = 0; i < wc; i++)
+	{
+		/* Allocate memory for nested elements */
+		wordlen = wordcounter(str, i + 1, 0);
+		if (i == 0 && str[i] != ' ')
+			wordlen++;
+		p[i] = malloc(wordlen * sizeof(char) + 1);
+		if (p[i] == NULL)
+		{
+			for ( ; i >= 0; --i)
+				free(p[i]);
+			free(p);
+			return (NULL);
+		}
+		/* initialize each element of the nested array with the word*/
+		getfirstchar = wordcounter(str, i + 1, 1);
+		if (str[0] != ' ' && i > 0)
+			getfirstchar++;
+		else if (str[0] == ' ')
+			getfirstchar++;
+		for (j = 0; j < wordlen; j++)
+			p[i][j] = str[getfirstchar + j];
+		p[i][j] = '\0';
+	}
+	p[i] = NULL;
+	return (p);
 }
